@@ -1,0 +1,301 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+	<head>
+		<title>网页游戏</title>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<style type="text/css">
+			#content{
+				width:400px;
+				height:400px;
+				border: 1px solid black;
+				background-color:#ffffff;
+				position: relative;
+			}
+			
+			div{
+				position: absolute;
+				border: 1px solid yellow;
+				width:8px;
+				height:8px;
+				background-color: black;
+			}
+			
+		</style>
+		<script type="text/javascript">
+var cell_size = 10;//格子大小
+var row = 40; //定义一共有40行
+var col = 40; //定义一共有40列
+
+/*
+ * 定义方向参数
+ * 注：这里之所以将left和right,up和down设置成相反的整数值，是为了后面方便判断方向是否相反。
+ */
+var left = 1;
+var right = -1;
+var up = 2;
+var down = -2;
+
+var dir;//控制蛇运行的方向变量
+var now;//蛇的当前运行方向
+var speed=300;//运行速度
+var food;//食物对象
+var timer;//定时器
+var gameOver = true;//定义游戏状态
+
+var array = new Array();//用于存储蛇的节点的数组
+
+/*
+ *单个格子类，定义这个类可以作为蛇和食物的单个节点。 
+ *蛇可以由多个格子组成，食物可以由一个格子组成。
+ *所以蛇和食物的体积由格子的大小决定 ，位置也由格子的x和y决定
+ *总之：格子在这个游戏中成为了一种基本的单位或者说元素。
+ */
+function Cell(x, y) {
+	this.x = x;//横坐标
+	this.y = y;//纵坐标
+	/*绘制格子的方法
+	 *在格子对象中，自身定义了画格子的方法，方便代码的重用
+	 *在此绘制格子的方法是：先找到蛇运行的面板，在这里面板是一个div块
+	 *然后再创建一个div块作为格子,添加到面板中，格子的大小，由他的格式定义，位置为他的横纵坐标乘以格子的大小
+	 */
+	this.paint = function() {
+		var stage = document.getElementById("content");//根据Id找到面板元素，在此添加节点
+		var cell = document.createElement("div");//创建一个div块作为一个格子
+		stage.appendChild(cell);//添加到面板中
+		//格子的位置为它的横纵坐标乘以格子大小
+		cell.style.left = x * cell_size;
+		cell.style.top = y * cell_size;
+	};
+}
+
+/*
+ * 游戏开始
+ */
+function startGame() {
+	/*
+	 * 初始化蛇
+	 * 蛇在初始的情况下，有四个节点，它们的位置为（3，0）（2，0）（1，0）（0，0）
+	 * 这样蛇就是从面板的左上方出来。
+	 */if (gameOver) {
+		gameOver=false;
+		array[0] = new Cell(3, 0);
+		array[1] = new Cell(2, 0);
+		array[2] = new Cell(1, 0);
+		array[3] = new Cell(0, 0);
+		food = randomFood();//初始化食物对象
+		dir = right;//设置初始运行方向
+		now = right;//设置当前运行方向
+		//speed = 150;//设置蛇的爬行速度
+		timer = window.setInterval(move, speed);//启动定时器，让蛇开始爬行。
+	}
+}
+/*
+ * 游戏结束
+ */
+function endGame() {
+	if (timer != null) {
+		gameOver=true;
+		window.clearInterval(timer);//关闭定时器
+		alert("游戏结束！要重来请点击开始按钮。");
+		array.length = 0;//将数组清空
+		repaint();//将面板刷新
+	}
+}
+/*
+ * 游戏暂停
+ */
+function pauseGame() {
+	window.clearInterval(timer);//关闭定时器
+}
+/*
+ * 游戏继续
+ */
+function continueGame() {
+	timer = window.setInterval(move, speed);//启动定时器
+}
+
+/*
+ * 键盘监听事件
+ * 通过监听键盘的输入，来控制蛇的运行方向
+ */
+function changedir(e) {
+	var key = e.keyCode;//得到键盘按下的键的编码
+	/*
+	 * 注：左键，上键，右键，下键的编码分别为整数：37，38，39，40。
+	 * left:37
+	 * up:38
+	 * right:39
+	 * down:40
+	 */
+	switch (key) {
+	case 37:
+		dir = left;
+		break;
+	case 38:
+		dir = up;
+		break;
+	case 39:
+		dir = right;
+		break;
+	case 40:
+		dir = down;
+		break;
+	}
+}
+
+/*
+ * 随机生成食物
+ */
+function randomFood() {
+	var x = Math.round(Math.random() * (col - 1));//随机生成食物的横坐标
+	var y = Math.round(Math.random() * (row - 1));//随机生成食物的纵坐标
+	var food = new Cell(x, y);
+	return food;
+}
+
+/*
+ * 判断是否撞到自己
+ */
+function isUs() {
+	//分别得到蛇头节点的横纵坐标
+	var x = array[0].x;
+	var y = array[0].y;
+	//用头节点的横纵坐标，通过循环一一和自己的其他节点坐标比较，如果都相等则返回true
+	for ( var i = 3; i < array.length; i++) {
+		if (array[i].x == x && array[i].y == y) {
+			return true;
+		}
+	}
+}
+
+/*
+ * 判断是否撞墙
+ */
+function isWall(){
+	//分别得到蛇头节点的横纵坐标
+	var x=array[0].x;
+	var y=array[0].y;
+	//超出范围则代表撞墙了，返回true
+	if(x<0||x>col-1||y<0||y>row-1){
+		return true;
+	}else{return false;}
+}
+
+/*
+ * 判断蛇是否吃到食物
+ * 如果吃到食物返回true,并且在头部新添加一个节点
+ * 否则返回false;
+*/
+function eatFood(){
+	//分别得到蛇头节点的横纵坐标
+	var x=array[0].x;
+	var y=array[0].y;
+	//如果吃到食物返回true,并且在头部新添加一个节点
+	if(x==food.x && y==food.y){
+		array.unshift(food);//在蛇的数组头部添加一个节点
+		return true;
+	}else{return false;}
+}
+
+/*
+ * 蛇爬行一步
+ * 
+*/
+function oneStep(){
+	//判断蛇当前的方向和控制蛇运行的方向是否相反，如果不相反则令当前的方向等于控制的方向
+	if(dir+now!=0){
+		now=dir;
+	}
+	array.pop();//移除末尾节点
+	//根据方向，定义新的头节点
+	var head;
+	switch(now){
+		case left:head = new Cell(array[0].x - 1, array[0].y);
+			break;
+		case right:head = new Cell(array[0].x + 1, array[0].y);
+			break;
+		case up:head = new Cell(array[0].x, array[0].y - 1);
+			break;
+		case down:head = new Cell(array[0].x, array[0].y + 1);
+			break;
+	}
+	array.unshift(head);//将新头节点，添加到数组头部
+}
+
+/*
+ * 蛇在运行每一步的过程中所有要执行的方法
+*/
+function move(){
+	oneStep();//蛇爬行一步
+	repaint();//刷新整个面板
+	food.paint();//绘制食物
+	showWorm();//绘制蛇
+	showSorce();//显示得分
+	if(isUs()||isWall()){endGame();}//判断是否撞墙或撞到自己，如果是就结束游戏。
+	if(eatFood()){food=randomFood();}//判断蛇是否吃到食物，如果吃到就重新创建一个食物
+}
+
+/*
+ * 刷新整个面板
+ * 这里刷新面板的方法是：先找到面板对象
+ * 再将面板下面的所有元素全部删除，从而达到刷新的目的。
+*/
+function repaint(){
+	var stage=document.getElementById("content");
+	while(stage.childNodes.length>0){
+		stage.removeChild(stage.firstChild);
+	}
+}
+
+/*
+ * 绘制蛇
+*/
+function showWorm(){
+	for(var i=0;i<array.length;i++){
+		array[i].paint();
+	}
+}
+
+/*
+ * 显示得分
+*/
+function showSorce(){
+	var span_sorce=document.getElementById("sorce");
+	span_sorce.innerHTML=array.length;//通过数组的长度来显示得分
+}
+
+/*
+ * 设置难度
+*/
+function setSpeed(){
+	if(gameOver){
+		var sel_index=document.getElementById("sel").selectedIndex;
+		switch(sel_index){
+			case 0:speed=300;break;
+			case 1:speed=150;break;
+			case 2:speed=70;break;
+		}
+	}
+}
+
+
+		</script>
+	</head>
+	<body onkeydown="changedir(event);">
+		<h2>贪吃蛇</h2>
+		<p>得分：<span id="sorce"></span></p>
+		<div id="content">
+		</div>
+		<br/>
+		难度：
+		<select id="sel" onchange="setSpeed();">
+			<option>简单</option>
+			<option>一般</option>
+			<option>困难</option>
+		</select>
+		<input type="button" value="开始" onclick="startGame();" />
+		<input type="button" value="结束" onclick="endGame();" />
+		<input type="button" value="暂停" onclick="pauseGame();" />
+		<input type="button" value="继续" onclick="continueGame();" />
+	</body>
+</html>
