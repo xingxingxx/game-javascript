@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>javaScript-Game</title>
+    <style type="text/css">
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<h3>贪吃蛇</h3>
+<canvas id="tutorial" width="400" height="400"></canvas>
+<p>得分：<span id="score">4</span></p>
+<p>
+    难度：
+    <select id="sel">
+        <option value="150">简单</option>
+        <option value="90">一般</option>
+        <option value="50">困难</option>
+    </select>
+    <input type="button" value="开始" id="startGame"/>
+    <input type="button" value="结束" id="endGame"/>
+    <input type="button" value="暂停" id="pauseGame"/>
+    <input type="button" value="继续" id="continueGame"/>
+</p>
+<script src="js/snake.js"></script>
+<script>
+    snake('tutorial', 'sel', 'score', 'startGame', 'endGame', 'pauseGame', 'continueGame');
+</script>
+</body>
+</html>
