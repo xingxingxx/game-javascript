@@ -11,7 +11,7 @@
 </head>
 <body>
 <canvas id="tutorial" width="400" height="400"></canvas>
-<p>得分：<span id="score"></span></p>
+<p>得分：<span id="score">4</span></p>
 <p>
     难度：
     <select id="sel">
@@ -37,7 +37,7 @@
         ctx.fillStyle = "black";//格子颜色
         ctx.fillRect(Cell.s * this.x, Cell.s * this.y, Cell.s, Cell.s);
     };
-    Cell.s = 10;//格子大小,模拟为静态变量
+    Cell.s = 8;//格子大小,模拟为静态变量
 
     var snake = (function (canvas, sel, score, startGameId, endGameId, pauseGameId, continueGameId) {
         var canvas = document.getElementById(canvas);//获取面板
@@ -96,8 +96,7 @@
                 if (timer != null) {
                     gameStatus = 0;
                     window.clearInterval(timer);//关闭定时器
-                    alert("游戏结束！要重来请点击开始按钮。");
-                    body.length = 0;//将数组清空
+                    body = [];//将数组清空
                     repaint();//将面板刷新
                 }
             }
